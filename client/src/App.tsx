@@ -1,4 +1,4 @@
-import { MapContainer, TileLayer, Polyline, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline } from "react-leaflet";
 import { useEffect, useState } from "react";
 import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -28,34 +28,6 @@ function findCity(point: Point | null) {
   return city ? city.name : "Seçilmedi";
 }
 
-function LocationSelector({
-  start,
-  end,
-  setStart,
-  setEnd,
-}: {
-  start: Point | null;
-  end: Point | null;
-  setStart: React.Dispatch<React.SetStateAction<Point | null>>;
-  setEnd: React.Dispatch<React.SetStateAction<Point | null>>;
-}) {
-  useMapEvents({
-    click(e) {
-      const { lat, lng } = e.latlng;
-
-      if (!start) {
-        setStart({ lat, lng });
-      } else if (!end) {
-        setEnd({ lat, lng });
-      } else {
-        setStart(null);
-        setEnd(null);
-      }
-    },
-  });
-
-  return null;
-}
 
 function App() {
 
@@ -205,13 +177,6 @@ function App() {
         <TileLayer
           attribution="&copy; OpenStreetMap &copy; CARTO"
           url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        />
-
-        <LocationSelector
-          start={start}
-          end={end}
-          setStart={setStart}
-          setEnd={setEnd}
         />
 
         {start && (
