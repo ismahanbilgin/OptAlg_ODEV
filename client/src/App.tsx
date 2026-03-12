@@ -1,10 +1,12 @@
-import { MapContainer, TileLayer, Marker, Polyline, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Polyline, useMapEvents } from "react-leaflet";
 import { useEffect, useState } from "react";
 import type { LatLngExpression } from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 import { nodes } from "./data/node";
 import { runGA } from "./algorithms/geneticAlgorithm";
+
+import { CircleMarker, Tooltip } from "react-leaflet";
 
 type Point = {
   lat: number;
@@ -15,6 +17,16 @@ type RouteResponse = {
   route: Point[];
   distance: number;
 };
+
+function findCity(point: Point | null) {
+  if (!point) return "Seçilmedi";
+
+  const city = nodes.find(
+    n => n.lat === point.lat && n.lng === point.lng
+  );
+
+  return city ? city.name : "Seçilmedi";
+}
 
 function LocationSelector({
   start,
@@ -61,6 +73,8 @@ function App() {
   const [algoTime, setAlgoTime] = useState<number | null>(null);
 
   const [distanceKm, setDistanceKm] = useState<number | null>(null);
+  const [directRoute, setDirectRoute] = useState<[number, number][]>([]);
+  const [directDistance, setDirectDistance] = useState<number | null>(null);
 
   const center: LatLngExpression = [39, 35];
 
@@ -96,10 +110,16 @@ function App() {
     });
 
     const data: RouteResponse = await response.json();
+    if (!data.route) {
+      alert("Route bulunamadı");
+      return;
+    }
 
     const routePoints: [number, number][] = data.route.map(p => [p.lat, p.lng]);
 
     setRoute(routePoints);
+    setDirectRoute(routePoints);
+    setDirectDistance(data.distance / 1000);
   };
 
   const runGeneticAlgorithm = async () => {
@@ -170,11 +190,21 @@ function App() {
 
     <div style={{ height: "100vh", width: "100%", position: "relative" }}>
 
-      <MapContainer center={center} zoom={6} style={{ height: "100%", width: "100%" }}>
+      <MapContainer
+        center={center}
+        zoom={6}
+        style={{ height: "100%", width: "100%" }}
+        maxBounds={[
+          [35.8, 25.6],
+          [42.2, 45.0]
+        ]}
+        maxBoundsViscosity={1.0}
+        minZoom={6}
+      >
 
         <TileLayer
-          attribution="&copy; OpenStreetMap contributors"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap &copy; CARTO"
+          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
         />
 
         <LocationSelector
@@ -184,22 +214,172 @@ function App() {
           setEnd={setEnd}
         />
 
-        {start && <Marker position={[start.lat, start.lng]} />}
-        {end && <Marker position={[end.lat, end.lng]} />}
+        {start && (
+          <CircleMarker
+            center={[start.lat, start.lng]}
+            radius={5}
+            pathOptions={{ color: "#E30A17", fillColor: "#E30A17", fillOpacity: 1 }}
+          >
+            <Tooltip>Başlangıç</Tooltip>
+          </CircleMarker>
+        )}
+
+        {end && (
+          <CircleMarker
+            center={[end.lat, end.lng]}
+            radius={5}
+            pathOptions={{ color: "#E30A17", fillColor: "#E30A17", fillOpacity: 1 }}
+          >
+            <Tooltip>Bitiş</Tooltip>
+          </CircleMarker>
+        )}
 
         {nodes.map(node => (
-          <Marker
+          <CircleMarker
             key={node.id}
-            position={[node.lat, node.lng]}
-            opacity={0.6}
-          />
+            center={[node.lat, node.lng]}
+            radius={4}
+            pathOptions={{
+              color: "#30d5c8",
+              fillColor: "#077376",
+              fillOpacity: 1
+            }}
+            eventHandlers={{
+              click: () => {
+
+                if (!start) {
+                  setStart({ lat: node.lat, lng: node.lng });
+                }
+                else if (!end) {
+                  setEnd({ lat: node.lat, lng: node.lng });
+                }
+                else {
+                  setStart({ lat: node.lat, lng: node.lng });
+                  setEnd(null);
+                }
+
+              }
+            }}
+          >
+            <Tooltip>{node.name}</Tooltip>
+          </CircleMarker>
         ))}
 
         {route.length > 0 && (
-          <Polyline positions={route} color="red" />
+          <Polyline positions={route} color="#ffffff" weight={3} />
+        )}
+
+        {directRoute.length > 0 && (
+          <Polyline positions={directRoute} color="#ea0909" weight={3} />
         )}
 
       </MapContainer>
+
+
+      <div
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "70px",
+          background: "#0b1320",
+          color: "white",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 20px",
+          zIndex: 2000,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.4)"
+        }}
+      >
+        {/* Sol taraf */}
+        <div style={{ display: "flex", flexDirection: "column" }}>
+          <span style={{ fontWeight: "bold", fontSize: "16px" }}>
+            OPTİMİZASYON ALGORİTMALARI
+          </span>
+          <span style={{ fontSize: "12px", color: "#4da3ff" }}>
+            ROTA OPTİMİZASYONU
+          </span>
+        </div>
+
+        {/* Orta kontrol paneli */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "15px",
+            background: "#111c2e",
+            padding: "10px 20px",
+            borderRadius: "12px"
+          }}
+        >
+          <span>başlangıç:</span>
+          <div
+            style={{
+              background: "#0b1320",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              border: "1px solid #333",
+              minWidth: "120px",
+              textAlign: "center"
+            }}
+          >
+            {findCity(start)}
+          </div>
+
+          <span>→</span>
+
+          <span>bitiş:</span>
+          <div
+            style={{
+              background: "#0b1320",
+              padding: "6px 12px",
+              borderRadius: "8px",
+              border: "1px solid #333",
+              minWidth: "120px",
+              textAlign: "center"
+            }}
+          >
+            {findCity(end)}
+          </div>
+
+          {/*
+          <span>Süre:</span>
+          {algoTime !== null && (
+            <div>
+              <strong>Algoritma Süresi:</strong> {algoTime.toFixed(2)} ms
+            </div>
+          )}
+           */}
+          <button
+            onClick={handleSendPoints}
+            style={{
+              background: "#1e63ff",
+              border: "none",
+              padding: "8px 16px",
+              borderRadius: "8px",
+              color: "white",
+              cursor: "pointer"
+            }}
+
+          >
+            Başlat
+          </button>
+        </div>
+
+        {/* Sağ taraf */}
+        <div
+          style={{
+            background: "#111c2e",
+            padding: "8px 14px",
+            borderRadius: "10px",
+            fontSize: "13px"
+          }}
+        >
+          bişeyler eklerim belki...
+        </div>
+      </div>
 
       {/* Sol panel */}
 
@@ -233,6 +413,19 @@ function App() {
         {distanceKm !== null && (
           <div>
             <strong>Mesafe:</strong> {distanceKm.toFixed(2)} km
+          </div>
+        )}
+
+        {directDistance !== null && (
+          <div>
+            <strong>Direct Route:</strong> {directDistance.toFixed(2)} km
+          </div>
+        )}
+
+        {distanceKm !== null && directDistance !== null && (
+          <div>
+            <strong>Improvement:</strong>{" "}
+            {(((directDistance - distanceKm) / directDistance) * 100).toFixed(2)} %
           </div>
         )}
 
@@ -273,9 +466,9 @@ function App() {
             onChange={(e) => setAlgorithm(e.target.value)}
             style={{ width: "100%" }}
           >
-            <option value="ga">Genetic Algorithm</option>
-            <option value="astar">A*</option>
-            <option value="dijkstra">Dijkstra</option>
+            <option value="ga">Genetik Algoritma</option>
+            <option value="astar">Benzetilmiş Tavlama </option>
+            <option value="dijkstra">Tabu Arama</option>
           </select>
         </div>
 
