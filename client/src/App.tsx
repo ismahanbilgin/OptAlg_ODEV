@@ -50,6 +50,8 @@ function App() {
 
   const center: LatLngExpression = [39, 35];
 
+  const [panelOpen, setPanelOpen] = useState(true);
+
   useEffect(() => {
     fetch("http://localhost:5000/health")
       .then((res) => res.json())
@@ -405,98 +407,145 @@ function App() {
         </button>
 
       </div>
-
       {/* Sağ panel */}
-
-      <div
-        style={{
-          position: "absolute",
-          top: 10,
-          right: 10,
-          width: "260px",
-          background: "white",
-          padding: "15px",
-          borderRadius: "10px",
-          boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
-          zIndex: 1000
-        }}
-      >
-
-        <h3>Algoritma Paneli</h3>
-
-        <div style={{ marginTop: "10px" }}>
-          <label>Algoritma</label>
-          <select
-            value={algorithm}
-            onChange={(e) => setAlgorithm(e.target.value)}
-            style={{ width: "100%" }}
-          >
-            <option value="ga">Genetik Algoritma</option>
-            <option value="astar">Benzetilmiş Tavlama </option>
-            <option value="dijkstra">Tabu Arama</option>
-          </select>
-        </div>
-
-        <div style={{ marginTop: "10px" }}>
-          <label>Population</label>
-          <input
-            type="number"
-            value={population}
-            onChange={(e) => setPopulation(Number(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: "10px" }}>
-          <label>Generations</label>
-          <input
-            type="number"
-            value={generations}
-            onChange={(e) => setGenerations(Number(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: "10px" }}>
-          <label>Mutation Rate</label>
-          <input
-            type="number"
-            step="0.01"
-            value={mutationRate}
-            onChange={(e) => setMutationRate(Number(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <div style={{ marginTop: "10px" }}>
-          <label>Tournament Size</label>
-          <input
-            type="number"
-            value={tournamentSize}
-            onChange={(e) => setTournamentSize(Number(e.target.value))}
-            style={{ width: "100%" }}
-          />
-        </div>
-
-        <button
-          onClick={runGeneticAlgorithm}
+      {panelOpen && (
+        <div
           style={{
-            marginTop: "15px",
-            width: "100%",
-            padding: "8px",
-            background: "#2ecc71",
-            border: "none",
-            color: "white",
-            borderRadius: "5px",
-            cursor: "pointer"
+            position: "absolute",
+            top: 90,
+            right: 20,
+            width: "260px",
+            maxWidth: "90vw",
+            background: "white",
+            padding: "15px",
+            borderRadius: "10px",
+            boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+            zIndex: 1000
           }}
         >
-          Route
-        </button>
 
-      </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "10px"
+            }}
+          >
+            <h3 style={{ margin: 0 }}>Algoritma Paneli</h3>
 
+            <button
+              onClick={() => setPanelOpen(false)}
+              style={{
+                border: "none",
+                background: "transparent",
+                fontSize: "18px",
+                cursor: "pointer"
+              }}
+            >
+              ×
+            </button>
+          </div>
+
+          <div style={{ marginTop: "10px" }}>
+            <label>Algoritma</label>
+            <select
+              value={algorithm}
+              onChange={(e) => setAlgorithm(e.target.value)}
+              style={{ width: "100%" }}
+            >
+              <option value="ga">Genetik Algoritma</option>
+              <option value="astar">Benzetilmiş Tavlama </option>
+              <option value="dijkstra">Tabu Arama</option>
+            </select>
+          </div>
+
+          <div style={{ marginTop: "10px" }}>
+            <label>Population</label>
+            <input
+              type="number"
+              value={population}
+              onChange={(e) => setPopulation(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          <div style={{ marginTop: "10px" }}>
+            <label>Generations</label>
+            <input
+              type="number"
+              value={generations}
+              onChange={(e) => setGenerations(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          <div style={{ marginTop: "10px" }}>
+            <label>Mutation Rate</label>
+            <input
+              type="number"
+              step="0.01"
+              value={mutationRate}
+              onChange={(e) => setMutationRate(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          <div style={{ marginTop: "10px" }}>
+            <label>Tournament Size</label>
+            <input
+              type="number"
+              value={tournamentSize}
+              onChange={(e) => setTournamentSize(Number(e.target.value))}
+              style={{ width: "100%" }}
+            />
+          </div>
+
+          <button
+            onClick={runGeneticAlgorithm}
+            style={{
+              marginTop: "15px",
+              width: "100%",
+              padding: "8px",
+              background: "#2ecc71",
+              border: "none",
+              color: "white",
+              borderRadius: "5px",
+              cursor: "pointer"
+            }}
+          >
+            Route
+          </button>
+
+        </div>
+      )}
+
+      {!panelOpen && (
+        <div
+          onClick={() => setPanelOpen(true)}
+          style={{
+            position: "absolute",
+            bottom: 80,
+            right: 70,
+            width: "55px",
+            height: "55px",
+            borderRadius: "50%",
+            background: "#E30A17",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: "white",
+            fontSize: "22px",
+            cursor: "pointer",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.3)",
+            zIndex: 1000
+          }}
+        >
+         ☾⭑
+        </div>
+      )}
     </div>
+
 
   );
 }
